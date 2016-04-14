@@ -1,60 +1,55 @@
-import java.sql.*;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Map;
+import java.io.IOException;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import Statistics.Statistics;
+/**
+*Nombre del Programa: Integration Of the t Function Using Simpson Rule
+*@author Mario Andres Ochoa Camacho
+*@version 1.0
+*Fecha: 13/04/2016
+*Descripcion: Calcula la Integral de la funcion t usando la Regla de Simpson
 
-import static spark.Spark.*;
-import spark.template.freemarker.FreeMarkerEngine;
-import spark.ModelAndView;
-import static spark.Spark.get;
+*Import: java.io.IOException
+*Paquete: Statistics
+*Clase: Main
+*Metodos: main,BeginCalc
 
-import com.heroku.sdk.jdbc.DatabaseUrl;
-
+*Instrucciones de Uso:
+*Solo es ecesario ejecutar el programa y se calculan los vlaores, si se desean calcualr otros es necesario modificar el programa
+*/
 public class Main {
-
-  public static void main(String[] args) {
-
-    port(Integer.valueOf(System.getenv("PORT")));
-    staticFileLocation("/public");
-
-    get("/hello", (req, res) -> "Hello World");
-
-    get("/", (request, response) -> {
-            Map<String, Object> attributes = new HashMap<>();
-            attributes.put("message", "Hello World!");
-
-            return new ModelAndView(attributes, "index.ftl");
-        }, new FreeMarkerEngine());
-
-    get("/db", (req, res) -> {
-      Connection connection = null;
-      Map<String, Object> attributes = new HashMap<>();
-      try {
-        connection = DatabaseUrl.extract().getConnection();
-
-        Statement stmt = connection.createStatement();
-        stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-        stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-        ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
-
-        ArrayList<String> output = new ArrayList<String>();
-        while (rs.next()) {
-          output.add( "Read from DB: " + rs.getTimestamp("tick"));
-        }
-
-        attributes.put("results", output);
-        return new ModelAndView(attributes, "db.ftl");
-      } catch (Exception e) {
-        attributes.put("message", "There was an error: " + e);
-        return new ModelAndView(attributes, "error.ftl");
-      } finally {
-        if (connection != null) try{connection.close();} catch(SQLException e){}
-      }
-    }, new FreeMarkerEngine());
-
+/**
+ * Clase Princial
+ * @param args
+ * @throws IOException 
+ */
+  public static void main(String[] args){
+			
+	  System.out.println("Para x=0 a 1.1    y con dof = 9,  el valor de p = " + BeginCalc(0, 1.1,9,10));
+	  System.out.println("Para x=0 a 1.1812 y con dof = 10, el valor de p = " + BeginCalc(0, 1.1812,10,10));
+	  System.out.println("Para x=0 a 2.750  y con dof = 30, el valor de p = " + BeginCalc(0, 2.750 ,30,10));	
   }
-
+  
+  /**
+   * Realiza la iteracion para encontrar el valor
+   * @param x0 Valor inicial de x
+   * @param x1 Valor final de x
+   * @param dof Grados de libertad
+   * @param numSeg Numero de Segmentos
+   * @return Resultado
+   */
+  private static double BeginCalc(double x0, double x1, int dof, int numSeg){
+	  double result=0;
+	  double error = 0.00001;
+	  double actualValue = 0;
+	  double actualError = 0;
+	  
+	  do{
+		  result =  Statistics.CalcSimpson(x0, x1, numSeg, dof);
+		  actualError = Math.abs(result-actualValue);
+		  actualValue = result;
+		  numSeg = numSeg*2;
+	  }while(actualError > error);
+	  
+	  return result;
+  }
 }
